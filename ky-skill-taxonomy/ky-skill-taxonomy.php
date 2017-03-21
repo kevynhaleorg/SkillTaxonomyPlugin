@@ -7,7 +7,7 @@ Plugin Name: Ky Skill Taxonomy
 Plugin URI: https://kydeveloper.com/
 Description: Plugin to add custom taxonomies and fields to handle the skills page on the portfolio website. Tracks skills used in a job, project, and blog and reflects that in a count per skill. Provides a rest API to retrieve the data.
 Version: 1.0
-Author: Automattic
+Author: Kevyn Hale
 Author URI: kydeveloper.com
 License: GPLv2 or later
 Text Domain: kydeveloper
@@ -37,64 +37,118 @@ Copyright 2005-2015 Automattic, Inc.
 
 function skill_init() {
 	// create a new taxonomy
+
+    $labels = array(
+        'name'                           => 'Skills',
+        'singular_name'                  => 'Skills',
+        'search_items'                   => 'Search Skills',
+        'all_items'                      => 'All Skills',
+        'edit_item'                      => 'Edit Skill',
+        'update_item'                    => 'Update Skill',
+        'add_new_item'                   => 'Add New Skill',
+        'new_item_name'                  => 'New Skill Name',
+        'menu_name'                      => 'Skill',
+        'view_item'                      => 'View Skill',
+        'popular_items'                  => 'Popular Skill',
+        'separate_items_with_commas'     => 'Separate skills with commas',
+        'add_or_remove_items'            => 'Add or remove skills',
+        'choose_from_most_used'          => 'Choose from the most used skills',
+        'not_found'                      => 'No skills found'
+  ); 
+
+
 	register_taxonomy(
 		'skill',
 		'post',
 		array(
-			'label' => __( 'Skills' ),
-			'rewrite' => array( 'slug' => 'skill' ),
-			'capabilities' => array(
-				'assign_terms' => 'edit_guides',
-				'edit_terms' => 'publish_guides'
-			)
+            'label'              => __( 'Skill' ),
+			'labels'             => $labels,
+            'hierarchical'       => false,
+            'show_in_rest'       => true,
 		)
 	);
 }
-add_action( 'init', 'skill_init' );
+add_action( 'init', 'skill_init', 0 );
 
 // Set up new Taxonomy `SKILL`s custom fields:
 // 1) active (boolean)
 // 2) order (number)
 
-function my_taxonomy_add_meta_fields( $taxonomy ) {
+function skill_add_meta_fields( $taxonomy ) {
     ?>
-    <div class="form-field term-group">
-        <label for="my_field"><?php _e( 'My Field', 'ky-skill-taxonomy' ); ?></label>
-        <input type="text" id="my_field" name="my_field" />
-    </div>
+        <div class="form-field">
+            <label for="term_meta[class_term_meta]"><?php _e( 'Active', 'active' ); ?></label>
+            <select name="term_meta[class_term_meta]" id="term_meta[class_term_meta]">
+                <option value="false">false</option>
+                <option value="true">true</option>
+            </select>
+            <p class="description"><?php _e( 'Enter a value for this field','active' ); ?></p>
+        </div>
+        <div class="form-field">
+            <label for="term_meta[class_type_meta]"><?php _e( 'Type', 'ky_type' ); ?></label>
+            <select name="term_meta[class_type_meta]" id="term_meta[class_type_meta]">
+                <option value="development">Development</option>
+                <option value="devops">Devops</option>
+                <option value="design">Design</option>
+            </select>
+            <p class="description"><?php _e( 'Enter a value for this field','ky_type' ); ?></p>
+        </div>
     <?php
 }
-add_action( 'my_taxonomy_add_form_fields', 'my_taxonomy_add_meta_fields', 10, 2 );
+add_action( 'skill_add_form_fields', 'skill_add_meta_fields', 10, 2 );
 
-function my_taxonomy_edit_meta_fields( $term, $taxonomy ) {
-    $my_field = get_term_meta( $term->term_id, 'my_field', true );
-    ?>
-    <tr class="form-field term-group-wrap">
-        <th scope="row">
-            <label for="my_field"><?php _e( 'My Field', 'ky-skill-taxonomy' ); ?></label>
-        </th>
-        <td>
-            <input type="text" id="my_field" name="my_field" value="<?php echo $my_field; ?>" />
-        </td>
-    </tr>
+function skill_edit_meta_fields( $term, $taxonomy ) {
+    $t_id = $term->term_id;
+    $term_meta = get_option( "taxonomy_$t_id" ); 
+    $value = esc_attr( $term_meta['class_term_meta']);
+    $valueType = esc_attr( $term_meta['class_type_meta']);
+
+       ?>
+        <tr class="form-field">
+        <th scope="row" valign="top"><label for="term_meta[class_term_meta]"><?php _e( 'Active', 'active' ); ?></label></th>
+            <td>
+                <select name="term_meta[class_term_meta]" id="term_meta[class_term_meta]" value="<?php echo esc_attr( $term_meta['class_term_meta'] ) ? esc_attr( $term_meta['class_term_meta'] ) : ''; ?>">
+                    <option value="false" <?php echo $value == "false" ? "selected" : '';?> >false</option>
+                    <option value="true" <?php echo $value == "true" ? "selected" : '';?> >true</option>
+                </select>
+                <p class="description"><?php _e( 'Enter a value for this field','active' ); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+        <th scope="row" valign="top"><label for="term_meta[class_type_meta]"><?php _e( 'Type', 'ky_type' ); ?></label></th>
+            <td>
+                <select name="term_meta[class_type_meta]" id="term_meta[class_type_meta]" value="<?php echo esc_attr( $term_meta['class_type_meta'] ) ? esc_attr( $term_meta['class_type_meta'] ) : ''; ?>">
+                    <option value="development" <?php echo $valueType == "development" ? "selected" : '';?> >Development</option>
+                    <option value="devops" <?php echo $valueType == "devops" ? "selected" : '';?> >Devops</option>
+                    <option value="design" <?php echo $valueType == "design" ? "selected" : '';?> >Design</option>
+                </select>
+                <p class="description"><?php _e( 'Enter a value for this field','ky_type' ); ?></p>
+            </td>
+        </tr>
     <?php
 }
-add_action( 'my_taxonomy_edit_form_fields', 'my_taxonomy_edit_meta_fields', 10, 2 );
+add_action( 'skill_edit_form_fields', 'skill_edit_meta_fields', 10, 2 );
 
-function my_taxonomy_save_taxonomy_meta( $term_id, $tag_id ) {
-    if( isset( $_POST['my_field'] ) ) {
-        update_term_meta( $term_id, 'my_field', esc_attr( $_POST['my_field'] ) );
-    }
-}
-add_action( 'created_my_taxonomy', 'my_taxonomy_save_taxonomy_meta', 10, 2 );
-add_action( 'edited_my_taxonomy', 'my_taxonomy_save_taxonomy_meta', 10, 2 );
+function skill_save_taxonomy_custom_meta_field( $term_id ) {
+        if ( isset( $_POST['term_meta'] ) ) {
+            
+            $t_id = $term_id;
+            $term_meta = get_option( "taxonomy_$t_id" );
+            $cat_keys = array_keys( $_POST['term_meta'] );
+            foreach ( $cat_keys as $key ) {
+                if ( isset ( $_POST['term_meta'][$key] ) ) {
+                    $term_meta[$key] = $_POST['term_meta'][$key];
+                }
+            }
+            // Save the option array.
+            update_option( "taxonomy_$t_id", $term_meta );
+        }
+        
+    }  
+add_action( 'edited_skill', 'skill_save_taxonomy_custom_meta_field', 10, 2 );  
+add_action( 'create_skill', 'skill_save_taxonomy_custom_meta_field', 10, 2 );
 
-function my_taxonomy_add_field_columns( $columns ) {
-    $columns['my_field'] = __( 'My Field', 'ky-skill-taxonomy' );
-
-    return $columns;
-}
-add_filter( 'manage_edit-my_taxonomy_columns', 'my_taxonomy_add_field_columns' );
 
 
 
