@@ -93,6 +93,23 @@ function skill_add_meta_fields( $taxonomy ) {
             </select>
             <p class="description"><?php _e( 'Enter a value for this field','ky_type' ); ?></p>
         </div>
+        <div class="form-field">
+        <label for="series_image"><?php _e( 'Series Image:', 'journey' ); ?></label>
+        <input type="text" name="series_image[image]" id="series_image[image]" class="series-image" value="<?php echo $seriesimage; ?>">
+        <input class="upload_image_button button" name="_add_series_image" id="_add_series_image" type="button" value="Select/Upload Image" />
+        <script>
+            jQuery(document).ready(function() {
+                jQuery('#_add_series_image').click(function() {
+                    wp.media.editor.send.attachment = function(props, attachment) {
+                        jQuery('.series-image').val(attachment.url);
+                    }
+                    wp.media.editor.open(this);
+                    return false;
+                });
+            });
+        </script>
+    </div>
+
     <?php
 }
 add_action( 'skill_add_form_fields', 'skill_add_meta_fields', 10, 2 );
