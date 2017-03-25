@@ -38,6 +38,45 @@ include("skill-meta.php");
 $KY_SKILL_META = new KY_SKILL_META();
 $KY_SKILL_META -> init();
 
+add_action( 'rest_api_init', function () {
+	register_rest_route( 'kyskills/v1', '/skills', array(
+		'methods' => 'GET',
+		'callback' => 'get_skills',
+	) );
+} );
+
+function get_skills() {
+	$skills = get_terms( array(
+    	'taxonomy' => 'skill',
+    	'hide_empty' => false,
+		) );
+
+	$result = [];
+	$i = 0;
+	foreach ($skills as $skill) {
+
+		$result[$i]['name'] = $skill->name;
+		$result[$i]['slug'] = $skill->slug;
+		$result[$i]['id'] = $skill->term_id;
+		$result[$i]['description'] = $skill->description;
+		$result[$i]['count'] = $skill->count;
+
+		$optional = get_option( "taxonomy_" . $skill->term_id );
+		$result[$i]['type'] = $optional['class_type_meta'];
+		$result[$i]['active'] = $optional['class_term_meta'];
+
+
+		$result[$i]['image'] = wp_get_attachment_url ( 
+			get_term_meta ( $skill->term_id, 'category-image-id', true ));
+
+		$i++;
+	}
+	
+	return $result;
+}
+
+
+
 
 
 
