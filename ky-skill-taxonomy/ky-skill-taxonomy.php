@@ -86,14 +86,14 @@ function get_skill( $data ) {
 
 	$response = [];
 
-	if (!$data['id'] || !$data['id']) {
+	if (!$data['slug'] || !$data['type']) {
 		return array(
 			'result' => 'error',
-			'message' => 'Must provide both a id and type.'
+			'message' => 'Must provide both a slug and type.'
 			);
 	}
 
-	$id = $data['id'];
+	$slug = $data['slug'];
 	$type = $data['type'];
 
 	$args = array(
@@ -104,8 +104,8 @@ function get_skill( $data ) {
 		'tax_query' => array(
 	    	array(
 	    		'taxonomy' => 'skill',
-	    		'field' => 'id',
-	    		'terms' => $id
+	    		'field' => 'slug',
+	    		'terms' => $slug
 	     	),
 	    	array(
 	    		'taxonomy' => 'category',
@@ -121,7 +121,7 @@ function get_skill( $data ) {
 
 		$search->the_post();
 		$response[$count]['id'] = get_the_ID($post->ID);
-	    $response[$count]['thumbnail'] = wp_get_attachment_image ( $post->ID, 'thumbnail' );
+	    $response[$count]['thumbnail'] = get_the_post_thumbnail_url ( $post->ID );
 	    $response[$count]['title'] = get_the_title($post->ID);
 
 	    $count++;
