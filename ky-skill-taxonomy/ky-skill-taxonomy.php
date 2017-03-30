@@ -45,6 +45,13 @@ add_action( 'rest_api_init', function () {
 	) );
 } );
 
+add_action( 'rest_api_init', function () {
+	register_rest_route( 'kyskills/v1', '/skill', array(
+		'methods' => 'GET',
+		'callback' => 'get_skill',
+	) );
+} );
+
 function get_skills() {
 	$skills = get_terms( array(
     	'taxonomy' => 'skill',
@@ -73,6 +80,59 @@ function get_skills() {
 	}
 	
 	return $result;
+}
+
+function get_skill( $data ) {
+
+	$response = [];
+
+	if (!$data['id'] || !$data['id']) {
+		return array(
+			'result' => 'error',
+			'message' => 'Must provide both a id and type.'
+			);
+	}
+
+	$id = $data['id'];
+	$type = $data['type'];
+
+	$args = array(
+		'post_type'         => 'post',
+    	'order'             => 'DESC',
+    	'orderby'           => 'date',
+    	'posts_per_page'    => 3,
+		'tax_query' => array(
+	    	array(
+	    		'taxonomy' => 'skill',
+	    		'field' => 'id',
+	    		'terms' => $id
+	     	),
+	    	array(
+	    		'taxonomy' => 'category',
+	    		'field' => 'slug',
+	    		'terms' => $type
+	    	)
+	  )
+	);
+	$search = new WP_Query( $args );
+
+	$count = 0;
+	while ($search->have_posts()) {
+
+		$search->the_post();
+		$response[$count]['id'] = get_the_ID($post->ID);
+	    $response[$count]['thumbnail'] = wp_get_attachment_image ( $post->ID, 'thumbnail' );
+	    $response[$count]['title'] = get_the_title($post->ID);
+
+	    $count++;
+	}
+
+	unset($search);	
+
+	wp_reset_query();
+
+	return $response;
+
 }
 
 
